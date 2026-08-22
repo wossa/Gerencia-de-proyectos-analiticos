@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAT-DU | Analítica de Deserción Universitaria</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+  <header class="bg-slate-900 text-white p-5 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Gerencia de Proyectos & Analítica de Datos</h1>
+        <p class="text-slate-400 text-sm">
+          Sistema de Alerta Temprana de Deserción Universitaria (SAT-DU)
+        </p>
+      </div>
+      <span class="bg-indigo-600 text-indigo-100 text-xs px-3 py-1.5 rounded-full font-medium shadow-sm">
+        Madurez DAMA: Nivel 3 (Definido)
+      </span>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 md:p-6 flex-1 w-full space-y-6">
+    <div class="flex border-b border-slate-200 overflow-x-auto">
+      <button id="tab1-btn" onclick="switchTab('tab1')"
+        class="whitespace-nowrap py-3 px-5 border-b-2 border-indigo-600 font-semibold text-indigo-600">
+        1. Resolución Analítica & Carga de Datos
+      </button>
+      <button id="tab2-btn" onclick="switchTab('tab2')"
+        class="whitespace-nowrap py-3 px-5 border-b-2 border-transparent text-slate-500 hover:text-indigo-600 font-semibold">
+        2. Seguimiento del Proyecto (WBS & KPIs)
+      </button>
+    </div>
+
+    <section id="tab1" class="space-y-6">
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Fuente de Datos: Excel o CSV</h2>
+          <p class="text-xs text-slate-500 mt-1 max-w-3xl">
+            Puede cargar directamente la base SAT-DU en formato <strong>.xlsx</strong>, <strong>.xls</strong> o <strong>.csv</strong>.
+            Variables principales: <code>id_estudiante</code>, <code>programa</code>,
+            <code>promedio_academico</code>, <code>asistencia_pct</code>,
+            <code>probabilidad_latente_desercion</code> y <code>deserta_siguiente_periodo</code>.
+          </p>
+          <p id="dataStatus" class="text-xs text-indigo-600 mt-2 font-medium">Cargando base incluida…</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <input type="file" id="dataFileInput" accept=".xlsx,.xls,.csv"
+            class="text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+          <button onclick="loadBundledData()"
+            class="px-4 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+            Cargar base incluida
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Estudiantes</span>
+          <p class="text-2xl font-bold text-slate-800 mt-1" id="kpiTotal">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-red-500">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Riesgo alto</span>
+          <p class="text-2xl font-bold text-red-600 mt-1" id="kpiHigh">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Riesgo medio</span>
+          <p class="text-2xl font-bold text-amber-600 mt-1" id="kpiMedium">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Riesgo bajo</span>
+          <p class="text-2xl font-bold text-emerald-600 mt-1" id="kpiLow">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
+          <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Deserción observada</span>
+          <p class="text-2xl font-bold text-blue-600 mt-1" id="kpiObserved">0%</p>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Programa</label>
+          <select id="programFilter" onchange="applyAnalytics()"
+            class="w-full border border-slate-200 rounded-lg p-2 text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="Todos">Todos los programas</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Semestre</label>
+          <select id="semesterFilter" onchange="applyAnalytics()"
+            class="w-full border border-slate-200 rounded-lg p-2 text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="Todos">Todos</option>
+            <option value="1">Semestre 1</option>
+            <option value="2">Semestre 2</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Zona de origen</label>
+          <select id="zoneFilter" onchange="applyAnalytics()"
+            class="w-full border border-slate-200 rounded-lg p-2 text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="Todos">Todas</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Riesgo alto ≥</label>
+          <input type="number" id="thresholdHigh" value="0.30" min="0" max="1" step="0.05"
+            onchange="applyAnalytics()"
+            class="w-full border border-slate-200 rounded-lg p-2 text-sm bg-slate-50" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Riesgo medio ≥</label>
+          <input type="number" id="thresholdMedium" value="0.15" min="0" max="1" step="0.05"
+            onchange="applyAnalytics()"
+            class="w-full border border-slate-200 rounded-lg p-2 text-sm bg-slate-50" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-5 flex flex-col">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 class="font-bold text-sm text-slate-700">Promedio académico vs. riesgo de deserción</h3>
+              <p class="text-xs text-slate-400 mt-1">Cada punto representa un estudiante.</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] uppercase text-slate-400 font-semibold">Riesgo promedio</span>
+              <p id="avgRisk" class="font-bold text-indigo-600">0%</p>
+            </div>
+          </div>
+          <div class="flex-1 relative min-h-[360px]">
+            <canvas id="riskChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-7 flex flex-col">
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+            <div>
+              <h3 class="font-bold text-sm text-slate-700">Matriz de Priorización e Intervención</h3>
+              <p class="text-xs text-slate-400">Ordenada de mayor a menor probabilidad de deserción.</p>
+            </div>
+            <span id="tableCount" class="text-xs font-medium text-slate-500"></span>
+          </div>
+
+          <div class="overflow-x-auto max-h-[430px] overflow-y-auto border rounded-lg">
+            <table class="w-full text-left text-xs border-collapse min-w-[850px]">
+              <thead class="bg-slate-100 text-slate-600 sticky top-0 z-10">
+                <tr>
+                  <th class="p-2.5">Estudiante</th>
+                  <th class="p-2.5">Programa</th>
+                  <th class="p-2.5 text-center">Sem.</th>
+                  <th class="p-2.5 text-right">Promedio</th>
+                  <th class="p-2.5 text-right">Asistencia</th>
+                  <th class="p-2.5 text-right">Riesgo</th>
+                  <th class="p-2.5">Factor principal</th>
+                  <th class="p-2.5 text-center">Acción sugerida</th>
+                </tr>
+              </thead>
+              <tbody id="riskTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-sm text-slate-700">Criterio de priorización</h3>
+          <p class="text-xs text-slate-500 mt-2 leading-5">
+            Por defecto: <strong>alto ≥ 30%</strong>, <strong>medio ≥ 15%</strong> y
+            <strong>bajo &lt; 15%</strong>. Los umbrales pueden ajustarse para simular políticas de intervención.
+          </p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-sm text-slate-700">Lectura del modelo</h3>
+          <p class="text-xs text-slate-500 mt-2 leading-5">
+            La probabilidad es una señal de priorización, no una sentencia. Debe complementarse con revisión académica,
+            financiera y de bienestar antes de tomar decisiones sobre un estudiante.
+          </p>
+        </div>
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-sm text-slate-700">Calidad y ética</h3>
+          <p class="text-xs text-slate-500 mt-2 leading-5">
+            La base es sintética y no contiene datos personales reales. En un escenario productivo se deben aplicar
+            controles de acceso, trazabilidad, minimización de datos y monitoreo de sesgos.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab2" class="space-y-6 hidden">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Avance General WBS</span>
+          <div class="text-3xl font-extrabold text-indigo-600 mt-1" id="projectProgressPct">0%</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Calidad de Datos</span>
+          <div class="text-3xl font-extrabold text-emerald-600 mt-1" id="dataQuality">—</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Hitos Completados</span>
+          <div class="text-3xl font-extrabold text-blue-600 mt-1" id="completedMilestones">0/5</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Estado de Riesgo</span>
+          <div class="text-3xl font-extrabold text-teal-600 mt-1" id="projectRisk">Controlado</div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-5">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Estructura de Desglose del Trabajo (WBS) — SAT-DU</h3>
+            <p class="text-xs text-slate-400 mt-1">Ciclo de vida del proyecto analítico para prevención de deserción.</p>
+          </div>
+          <span class="text-xs text-slate-500">Marque las actividades completadas</span>
+        </div>
+        <div class="space-y-3" id="projectTasksContainer"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-800 text-base mb-4">Project Charter — Resumen</h3>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Problema</dt><dd class="mt-1">Identificar estudiantes con señales tempranas de posible deserción.</dd></div>
+            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Objetivo</dt><dd class="mt-1">Priorizar intervenciones académicas, financieras y de bienestar.</dd></div>
+            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Población</dt><dd class="mt-1">Estudiantes de primer y segundo semestre.</dd></div>
+            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Producto</dt><dd class="mt-1">Tablero SAT-DU con segmentación de riesgo y matriz de acción.</dd></div>
+          </dl>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <h3 class="font-bold text-slate-800 text-base mb-4">KPIs de adopción sugeridos</h3>
+          <ul class="text-sm text-slate-600 space-y-3 list-disc pl-5">
+            <li>% de estudiantes de riesgo alto contactados en máximo 5 días hábiles.</li>
+            <li>% de casos priorizados con plan de intervención registrado.</li>
+            <li>Tasa de permanencia de estudiantes intervenidos vs. no intervenidos.</li>
+            <li>Precisión y recall del modelo al cierre de cada periodo académico.</li>
+            <li>Tiempo promedio entre alerta y primera acción institucional.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-200 bg-white">
+    <div class="max-w-7xl mx-auto px-6 py-4 text-xs text-slate-400">
+      SAT-DU — Prototipo académico con datos sintéticos.
+    </div>
+  </footer>
+
+<script>
+let currentData = [];
+let chartInstance = null;
+
+const projectPhases = [
+  { id: 1, name: 'Fase 1: Definición del problema, alcance y Project Charter', lead: 'Gerente de Proyecto', completed: true },
+  { id: 2, name: 'Fase 2: Adquisición, perfilado, limpieza y gobierno de datos (DAMA)', lead: 'Ingeniería / Gobierno de Datos', completed: true },
+  { id: 3, name: 'Fase 3: Análisis exploratorio, segmentación y reglas de riesgo', lead: 'Analista / Científico de Datos', completed: true },
+  { id: 4, name: 'Fase 4: Desarrollo y despliegue del tablero SAT-DU', lead: 'BI / Desarrollo', completed: true },
+  { id: 5, name: 'Fase 5: Validación institucional, protocolo de intervención y monitoreo', lead: 'Bienestar + Académica + PM', completed: false }
+];
+
+const requiredColumns = [
+  'id_estudiante','semestre','edad','sexo','departamento_origen','zona_origen','estrato',
+  'tipo_colegio','percentil_saber11','programa','trabaja','horas_trabajo_semana',
+  'personas_a_cargo','ingreso_hogar_smlmv','apoyo_financiero','fuente_financiacion',
+  'tiempo_desplazamiento_min','creditos_matriculados','promedio_academico','asistencia_pct',
+  'actividad_lms_pct','materias_perdidas','materias_canceladas','mora_financiera',
+  'acompanamiento_bienestar','probabilidad_latente_desercion','deserta_siguiente_periodo'
+];
+
+function switchTab(tab) {
+  document.getElementById('tab1').classList.toggle('hidden', tab !== 'tab1');
+  document.getElementById('tab2').classList.toggle('hidden', tab !== 'tab2');
+
+  const b1 = document.getElementById('tab1-btn');
+  const b2 = document.getElementById('tab2-btn');
+  [b1,b2].forEach(b => {
+    b.classList.remove('border-indigo-600','text-indigo-600');
+    b.classList.add('border-transparent','text-slate-500');
+  });
+  const active = tab === 'tab1' ? b1 : b2;
+  active.classList.remove('border-transparent','text-slate-500');
+  active.classList.add('border-indigo-600','text-indigo-600');
+}
+
+function normalizeRow(row) {
+  const out = {};
+  Object.keys(row || {}).forEach(k => {
+    const key = String(k).trim();
+    let v = row[k];
+    if (typeof v === 'string') v = v.trim();
+    out[key] = v;
+  });
+  return out;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+    .replaceAll('"','&quot;').replaceAll("'",'&#039;');
+}
+
+function num(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function pct(value) {
+  return `${(num(value) * 100).toFixed(1)}%`;
+}
+
+function loadBundledData() {
+  document.getElementById('dataStatus').textContent = 'Cargando base incluida…';
+  fetch('./base_sintetica_sat_du.csv')
+    .then(r => {
+      if (!r.ok) throw new Error('No se encontró el CSV incluido.');
+      return r.text();
+    })
+    .then(text => {
+      const parsed = Papa.parse(text, { header: true, dynamicTyping: true, skipEmptyLines: true });
+      setData(parsed.data, 'Base incluida');
+    })
+    .catch(() => {
+      document.getElementById('dataStatus').textContent =
+        'Si abrió index.html directamente, use “Seleccionar archivo” y cargue el Excel original.';
+    });
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  document.getElementById('dataStatus').textContent = `Procesando ${file.name}…`;
+
+  if (ext === 'csv') {
+    Papa.parse(file, {
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: results => setData(results.data, file.name),
+      error: err => showError(err.message)
+    });
+    return;
+  }
+
+  if (ext === 'xlsx' || ext === 'xls') {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const workbook = XLSX.read(e.target.result, { type: 'array' });
+        const preferred = workbook.SheetNames.includes('Base_sintetica')
+          ? 'Base_sintetica'
+          : workbook.SheetNames[0];
+        const ws = workbook.Sheets[preferred];
+        const json = XLSX.utils.sheet_to_json(ws, { defval: null });
+        setData(json, `${file.name} · hoja ${preferred}`);
+      } catch (err) {
+        showError(err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    return;
+  }
+
+  showError('Formato no compatible. Use .xlsx, .xls o .csv.');
+}
+
+function showError(message) {
+  document.getElementById('dataStatus').textContent = `Error: ${message}`;
+}
+
+function setData(rows, sourceName) {
+  const normalized = (rows || []).map(normalizeRow).filter(r => r.id_estudiante);
+  if (!normalized.length) return showError('No se encontraron registros con id_estudiante.');
+
+  const missing = requiredColumns.filter(c => !(c in normalized[0]));
+  if (missing.length) {
+    return showError(`Faltan columnas requeridas: ${missing.join(', ')}`);
+  }
+
+  currentData = normalized;
+  document.getElementById('dataStatus').textContent =
+    `${sourceName}: ${currentData.length.toLocaleString('es-CO')} registros cargados correctamente.`;
+
+  populateFilters();
+  calculateDataQuality();
+  applyAnalytics();
+}
+
+function populateFilters() {
+  const programs = [...new Set(currentData.map(d => d.programa).filter(Boolean))].sort();
+  const zones = [...new Set(currentData.map(d => d.zona_origen).filter(Boolean))].sort();
+
+  document.getElementById('programFilter').innerHTML =
+    '<option value="Todos">Todos los programas</option>' +
+    programs.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+
+  document.getElementById('zoneFilter').innerHTML =
+    '<option value="Todos">Todas</option>' +
+    zones.map(z => `<option value="${escapeHtml(z)}">${escapeHtml(z)}</option>`).join('');
+}
+
+function riskLevel(prob, high, medium) {
+  if (prob >= high) return 'Alto';
+  if (prob >= medium) return 'Medio';
+  return 'Bajo';
+}
+
+function mainFactor(r) {
+  if (String(r.mora_financiera).toLowerCase() === 'sí' || String(r.mora_financiera).toLowerCase() === 'si')
+    return 'Mora financiera';
+  if (num(r.promedio_academico, 5) < 3.0) return 'Promedio académico bajo';
+  if (num(r.asistencia_pct, 100) < 80) return 'Baja asistencia';
+  if (num(r.actividad_lms_pct, 100) < 55) return 'Baja actividad en LMS';
+  if (num(r.materias_perdidas) >= 1) return 'Materias perdidas';
+  if (num(r.materias_canceladas) >= 1) return 'Materias canceladas';
+  if (String(r.trabaja).toLowerCase() === 'sí' && num(r.horas_trabajo_semana) >= 20)
+    return 'Carga laboral';
+  if (num(r.tiempo_desplazamiento_min) >= 75) return 'Desplazamiento prolongado';
+  if (num(r.percentil_saber11, 100) < 35) return 'Preparación académica de entrada';
+  return 'Riesgo multifactorial';
+}
+
+function actionFor(level, factor) {
+  if (level === 'Alto') {
+    if (factor === 'Mora financiera') return 'Prioridad: apoyo financiero + contacto';
+    if (factor.includes('académ') || factor.includes('Materias')) return 'Tutoría académica + seguimiento';
+    return 'Contacto integral + plan de intervención';
+  }
+  if (level === 'Medio') return 'Seguimiento preventivo';
+  return 'Monitoreo regular';
+}
+
+function badge(level, action) {
+  const cls = level === 'Alto'
+    ? 'bg-red-100 text-red-700'
+    : level === 'Medio'
+      ? 'bg-amber-100 text-amber-800'
+      : 'bg-emerald-100 text-emerald-700';
+  return `<span class="px-2 py-1 rounded text-[10px] font-semibold ${cls}">${escapeHtml(action)}</span>`;
+}
+
+function applyAnalytics() {
+  if (!currentData.length) return;
+
+  const selectedProgram = document.getElementById('programFilter').value;
+  const selectedSemester = document.getElementById('semesterFilter').value;
+  const selectedZone = document.getElementById('zoneFilter').value;
+  let high = num(document.getElementById('thresholdHigh').value, 0.30);
+  let medium = num(document.getElementById('thresholdMedium').value, 0.15);
+
+  if (medium >= high) {
+    medium = Math.max(0, high - 0.05);
+    document.getElementById('thresholdMedium').value = medium.toFixed(2);
+  }
+
+  const filtered = currentData.filter(r =>
+    (selectedProgram === 'Todos' || String(r.programa) === selectedProgram) &&
+    (selectedSemester === 'Todos' || String(r.semestre) === selectedSemester) &&
+    (selectedZone === 'Todos' || String(r.zona_origen) === selectedZone)
+  );
+
+  let highCount = 0, mediumCount = 0, lowCount = 0, observed = 0, riskSum = 0;
+  const enriched = filtered.map(r => {
+    const prob = num(r.probabilidad_latente_desercion);
+    const level = riskLevel(prob, high, medium);
+    if (level === 'Alto') highCount++;
+    else if (level === 'Medio') mediumCount++;
+    else lowCount++;
+    if (String(r.deserta_siguiente_periodo).toLowerCase() === 'sí' ||
+        String(r.deserta_siguiente_periodo).toLowerCase() === 'si') observed++;
+    riskSum += prob;
+    const factor = mainFactor(r);
+    return { ...r, _prob: prob, _level: level, _factor: factor, _action: actionFor(level, factor) };
+  }).sort((a,b) => b._prob - a._prob);
+
+  document.getElementById('kpiTotal').textContent = filtered.length.toLocaleString('es-CO');
+  document.getElementById('kpiHigh').textContent = highCount.toLocaleString('es-CO');
+  document.getElementById('kpiMedium').textContent = mediumCount.toLocaleString('es-CO');
+  document.getElementById('kpiLow').textContent = lowCount.toLocaleString('es-CO');
+  document.getElementById('kpiObserved').textContent =
+    filtered.length ? `${(observed / filtered.length * 100).toFixed(1)}%` : '0%';
+  document.getElementById('avgRisk').textContent =
+    filtered.length ? `${(riskSum / filtered.length * 100).toFixed(1)}%` : '0%';
+
+  renderTable(enriched);
+  renderChart(enriched, high, medium);
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('riskTableBody');
+  const maxRows = 250;
+  const shown = rows.slice(0, maxRows);
+
+  tbody.innerHTML = shown.map(r => {
+    const riskClass = r._level === 'Alto' ? 'text-red-600' :
+                      r._level === 'Medio' ? 'text-amber-600' : 'text-emerald-600';
+    return `
+      <tr class="hover:bg-slate-50 transition">
+        <td class="p-2.5 font-semibold text-slate-800">${escapeHtml(r.id_estudiante)}</td>
+        <td class="p-2.5 text-slate-600">${escapeHtml(r.programa || '-')}</td>
+        <td class="p-2.5 text-center">${escapeHtml(r.semestre ?? '-')}</td>
+        <td class="p-2.5 text-right">${num(r.promedio_academico).toFixed(2)}</td>
+        <td class="p-2.5 text-right">${num(r.asistencia_pct).toFixed(1)}%</td>
+        <td class="p-2.5 text-right font-bold ${riskClass}">${pct(r._prob)}</td>
+        <td class="p-2.5 text-slate-600">${escapeHtml(r._factor)}</td>
+        <td class="p-2.5 text-center">${badge(r._level, r._action)}</td>
+      </tr>`;
+  }).join('');
+
+  document.getElementById('tableCount').textContent =
+    rows.length > maxRows
+      ? `Mostrando ${maxRows} de ${rows.length.toLocaleString('es-CO')}`
+      : `${rows.length.toLocaleString('es-CO')} registros`;
+}
+
+function renderChart(rows, high, medium) {
+  const canvas = document.getElementById('riskChart');
+  const ctx = canvas.getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const groups = { Alto: [], Medio: [], Bajo: [] };
+  rows.forEach(r => {
+    groups[r._level].push({
+      x: num(r.promedio_academico),
+      y: r._prob * 100,
+      id: r.id_estudiante,
+      programa: r.programa,
+      asistencia: num(r.asistencia_pct)
+    });
+  });
+
+  chartInstance = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'Riesgo alto', data: groups.Alto, backgroundColor: 'rgba(220,38,38,0.70)', pointRadius: 4 },
+        { label: 'Riesgo medio', data: groups.Medio, backgroundColor: 'rgba(217,119,6,0.60)', pointRadius: 3.5 },
+        { label: 'Riesgo bajo', data: groups.Bajo, backgroundColor: 'rgba(5,150,105,0.45)', pointRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const p = ctx.raw;
+              return `${p.id} · ${p.programa} · Riesgo ${p.y.toFixed(1)}% · Promedio ${p.x.toFixed(2)} · Asistencia ${p.asistencia.toFixed(1)}%`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Promedio académico' },
+          min: 0, max: 5
+        },
+        y: {
+          title: { display: true, text: 'Probabilidad de deserción (%)' },
+          min: 0, max: 100
+        }
+      }
+    }
+  });
+}
+
+function calculateDataQuality() {
+  if (!currentData.length) {
+    document.getElementById('dataQuality').textContent = '—';
+    return;
+  }
+  let expected = 0, present = 0;
+  currentData.forEach(r => {
+    requiredColumns.forEach(c => {
+      expected++;
+      if (r[c] !== null && r[c] !== undefined && r[c] !== '') present++;
+    });
+  });
+  const quality = expected ? (present / expected * 100) : 0;
+  document.getElementById('dataQuality').textContent = `${quality.toFixed(1)}%`;
+}
+
+function renderTasks() {
+  const container = document.getElementById('projectTasksContainer');
+  let completedCount = projectPhases.filter(t => t.completed).length;
+
+  container.innerHTML = projectPhases.map((task, index) => `
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border rounded-xl transition
+      ${task.completed ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white border-slate-200'}">
+      <div class="flex items-start gap-3">
+        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})"
+          class="h-4 w-4 mt-0.5 text-indigo-600 rounded cursor-pointer" />
+        <div>
+          <span class="text-sm font-semibold ${task.completed ? 'line-through text-slate-400' : 'text-slate-700'}">
+            ${escapeHtml(task.name)}
+          </span>
+          <span class="block text-xs text-slate-400 mt-0.5">Responsable: ${escapeHtml(task.lead)}</span>
+        </div>
+      </div>
+      <span class="text-xs px-2.5 py-1 rounded-full font-medium self-start sm:self-auto
+        ${task.completed ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}">
+        ${task.completed ? 'Completado' : 'En curso / pendiente'}
+      </span>
+    </div>`).join('');
+
+  const pctDone = Math.round(completedCount / projectPhases.length * 100);
+  document.getElementById('projectProgressPct').textContent = `${pctDone}%`;
+  document.getElementById('completedMilestones').textContent = `${completedCount}/${projectPhases.length}`;
+  document.getElementById('projectRisk').textContent =
+    pctDone === 100 ? 'Cerrado' : pctDone >= 60 ? 'Controlado' : 'Atención';
+}
+
+function toggleTask(index) {
+  projectPhases[index].completed = !projectPhases[index].completed;
+  renderTasks();
+}
+
+document.getElementById('dataFileInput').addEventListener('change', handleFileUpload);
+renderTasks();
+loadBundledData();
+</script>
+</body>
+</html>
