@@ -84,6 +84,43 @@
         </div>
       </div>
 
+
+      <div class="bg-slate-900 text-white p-5 rounded-xl shadow-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 class="font-bold text-sm">Desempeño del Modelo SAT-DU</h3>
+            <p class="text-xs text-slate-400 mt-1">
+              Métricas de validación calculadas sobre la cohorte completa cargada. No cambian con los filtros de exploración.
+            </p>
+          </div>
+          <span class="text-[10px] uppercase tracking-wider bg-indigo-500/20 text-indigo-200 border border-indigo-400/20 px-3 py-1.5 rounded-full">
+            Modelo base validado
+          </span>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-white/5 border border-white/10 rounded-lg p-3">
+            <span class="text-[10px] uppercase text-slate-400 font-semibold">AUC ROC</span>
+            <p id="modelAuc" class="text-2xl font-bold mt-1">—</p>
+            <p class="text-[10px] text-slate-400 mt-1">Discriminación global</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-lg p-3">
+            <span class="text-[10px] uppercase text-slate-400 font-semibold">Captura Top 20%</span>
+            <p id="modelCapture20" class="text-2xl font-bold mt-1">—</p>
+            <p class="text-[10px] text-slate-400 mt-1">Desertores detectados</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-lg p-3">
+            <span class="text-[10px] uppercase text-slate-400 font-semibold">Lift Top 20%</span>
+            <p id="modelLift20" class="text-2xl font-bold mt-1">—</p>
+            <p class="text-[10px] text-slate-400 mt-1">Vs. selección aleatoria</p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-lg p-3">
+            <span class="text-[10px] uppercase text-slate-400 font-semibold">Capturados / Desertores</span>
+            <p id="modelCapturedCount" class="text-2xl font-bold mt-1">—</p>
+            <p class="text-[10px] text-slate-400 mt-1">Dentro del 20% priorizado</p>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div>
           <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Programa</label>
@@ -183,7 +220,7 @@
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <h3 class="font-bold text-sm text-slate-700">Lectura del modelo</h3>
           <p class="text-xs text-slate-500 mt-2 leading-5">
-            La probabilidad es una señal de priorización, no una sentencia. Debe complementarse con revisión académica,
+            La probabilidad es la salida del modelo SAT-DU y funciona como señal de priorización, no como una decisión automática. Debe complementarse con revisión académica,
             financiera y de bienestar antes de tomar decisiones sobre un estudiante.
           </p>
         </div>
@@ -200,54 +237,106 @@
     <section id="tab2" class="space-y-6 hidden">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
-          <span class="text-xs text-slate-400 font-semibold uppercase">Avance General WBS</span>
+          <span class="text-xs text-slate-400 font-semibold uppercase">Avance ejecutado</span>
           <div class="text-3xl font-extrabold text-indigo-600 mt-1" id="projectProgressPct">0%</div>
+          <p class="text-[10px] text-slate-400 mt-1">Actividades marcadas como completadas</p>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
-          <span class="text-xs text-slate-400 font-semibold uppercase">Calidad de Datos</span>
-          <div class="text-3xl font-extrabold text-emerald-600 mt-1" id="dataQuality">—</div>
+          <span class="text-xs text-slate-400 font-semibold uppercase">Horizonte del proyecto</span>
+          <div class="text-3xl font-extrabold text-emerald-600 mt-1">16</div>
+          <p class="text-[10px] text-slate-400 mt-1">Semanas planificadas</p>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
-          <span class="text-xs text-slate-400 font-semibold uppercase">Hitos Completados</span>
+          <span class="text-xs text-slate-400 font-semibold uppercase">Hitos alcanzados</span>
           <div class="text-3xl font-extrabold text-blue-600 mt-1" id="completedMilestones">0/5</div>
+          <p class="text-[10px] text-slate-400 mt-1">H1 a H5</p>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center">
-          <span class="text-xs text-slate-400 font-semibold uppercase">Estado de Riesgo</span>
-          <div class="text-3xl font-extrabold text-teal-600 mt-1" id="projectRisk">Controlado</div>
+          <span class="text-xs text-slate-400 font-semibold uppercase">Estado de seguimiento</span>
+          <div class="text-xl font-extrabold text-teal-600 mt-2" id="projectRisk">Sin iniciar</div>
+          <p class="text-[10px] text-slate-400 mt-1">Calculado según avance registrado</p>
         </div>
       </div>
 
       <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-5">
+        <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-3 mb-5">
           <div>
-            <h3 class="font-bold text-slate-800 text-base">Estructura de Desglose del Trabajo (WBS) — SAT-DU</h3>
-            <p class="text-xs text-slate-400 mt-1">Ciclo de vida del proyecto analítico para prevención de deserción.</p>
+            <h3 class="font-bold text-slate-800 text-base">Cronograma maestro SAT-DU — 16 semanas</h3>
+            <p class="text-xs text-slate-400 mt-1">
+              Secuencia A–L del entregable. Las actividades H e I se ejecutan en paralelo después de la validación funcional G.
+            </p>
           </div>
-          <span class="text-xs text-slate-500">Marque las actividades completadas</span>
+          <div class="text-xs bg-red-50 text-red-700 border border-red-100 px-3 py-2 rounded-lg">
+            <strong>Ruta crítica:</strong> A → B → C → E → F → G → (H e I) → J → K → L
+          </div>
         </div>
-        <div class="space-y-3" id="projectTasksContainer"></div>
+
+        <div class="overflow-x-auto border rounded-xl">
+          <div class="min-w-[1180px]">
+            <div class="grid bg-slate-100 text-[10px] font-semibold text-slate-500 uppercase"
+              style="grid-template-columns: 330px repeat(16, minmax(48px,1fr));">
+              <div class="p-3 border-r">Actividad</div>
+              <div class="p-3 text-center border-r">1</div><div class="p-3 text-center border-r">2</div>
+              <div class="p-3 text-center border-r">3</div><div class="p-3 text-center border-r">4</div>
+              <div class="p-3 text-center border-r">5</div><div class="p-3 text-center border-r">6</div>
+              <div class="p-3 text-center border-r">7</div><div class="p-3 text-center border-r">8</div>
+              <div class="p-3 text-center border-r">9</div><div class="p-3 text-center border-r">10</div>
+              <div class="p-3 text-center border-r">11</div><div class="p-3 text-center border-r">12</div>
+              <div class="p-3 text-center border-r">13</div><div class="p-3 text-center border-r">14</div>
+              <div class="p-3 text-center border-r">15</div><div class="p-3 text-center">16</div>
+            </div>
+            <div id="ganttContainer"></div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-4 mt-4 text-[11px] text-slate-500">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-200 border border-red-300"></span> Ruta crítica</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-indigo-200 border border-indigo-300"></span> No crítica</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-200 border border-emerald-300"></span> Completada</span>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-slate-800 text-base mb-4">Project Charter — Resumen</h3>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Problema</dt><dd class="mt-1">Identificar estudiantes con señales tempranas de posible deserción.</dd></div>
-            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Objetivo</dt><dd class="mt-1">Priorizar intervenciones académicas, financieras y de bienestar.</dd></div>
-            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Población</dt><dd class="mt-1">Estudiantes de primer y segundo semestre.</dd></div>
-            <div><dt class="text-xs uppercase text-slate-400 font-semibold">Producto</dt><dd class="mt-1">Tablero SAT-DU con segmentación de riesgo y matriz de acción.</dd></div>
-          </dl>
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm xl:col-span-8">
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Seguimiento de actividades A–L</h3>
+              <p class="text-xs text-slate-400 mt-1">Marque únicamente actividades realmente completadas. El estado se conserva en este navegador.</p>
+            </div>
+            <button onclick="resetProjectProgress()"
+              class="text-xs px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold">
+              Reiniciar seguimiento
+            </button>
+          </div>
+          <div class="space-y-2" id="projectTasksContainer"></div>
         </div>
 
-        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-slate-800 text-base mb-4">KPIs de adopción sugeridos</h3>
-          <ul class="text-sm text-slate-600 space-y-3 list-disc pl-5">
-            <li>% de estudiantes de riesgo alto contactados en máximo 5 días hábiles.</li>
-            <li>% de casos priorizados con plan de intervención registrado.</li>
-            <li>Tasa de permanencia de estudiantes intervenidos vs. no intervenidos.</li>
-            <li>Precisión y recall del modelo al cierre de cada periodo académico.</li>
-            <li>Tiempo promedio entre alerta y primera acción institucional.</li>
-          </ul>
+        <div class="space-y-6 xl:col-span-4">
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 text-base mb-4">Hitos principales</h3>
+            <div id="milestonesContainer" class="space-y-3"></div>
+          </div>
+
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 text-base mb-4">Project Charter — Resumen</h3>
+            <dl class="space-y-3 text-sm">
+              <div><dt class="text-[10px] uppercase text-slate-400 font-semibold">Objetivo</dt><dd class="mt-1">Sistema de alerta temprana para estudiantes de 1.º y 2.º semestre.</dd></div>
+              <div><dt class="text-[10px] uppercase text-slate-400 font-semibold">Modelo</dt><dd class="mt-1">Probabilidad individual de deserción y priorización por nivel de riesgo.</dd></div>
+              <div><dt class="text-[10px] uppercase text-slate-400 font-semibold">Criterio analítico</dt><dd class="mt-1">AUC ≥ 0,69 y evaluación de capacidad de focalización.</dd></div>
+              <div><dt class="text-[10px] uppercase text-slate-400 font-semibold">Producto</dt><dd class="mt-1">Modelo + API de predicción + tablero SAT-DU + transferencia a usuarios.</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 class="font-bold text-slate-800 text-base mb-4">KPIs operativos posteriores al despliegue</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm text-slate-600">
+          <div class="border rounded-lg p-3"><strong class="block text-slate-800 mb-1">Contacto oportuno</strong>% de estudiantes de riesgo alto contactados en ≤5 días hábiles.</div>
+          <div class="border rounded-lg p-3"><strong class="block text-slate-800 mb-1">Plan de intervención</strong>% de casos priorizados con acción institucional registrada.</div>
+          <div class="border rounded-lg p-3"><strong class="block text-slate-800 mb-1">Permanencia</strong>Tasa de permanencia de intervenidos frente a no intervenidos.</div>
+          <div class="border rounded-lg p-3"><strong class="block text-slate-800 mb-1">Desempeño del modelo</strong>AUC, precisión, recall, captura Top-K y lift por periodo.</div>
+          <div class="border rounded-lg p-3"><strong class="block text-slate-800 mb-1">Tiempo de respuesta</strong>Promedio entre generación de alerta y primera intervención.</div>
         </div>
       </div>
     </section>
@@ -255,7 +344,7 @@
 
   <footer class="border-t border-slate-200 bg-white">
     <div class="max-w-7xl mx-auto px-6 py-4 text-xs text-slate-400">
-      SAT-DU — Prototipo académico con datos sintéticos.
+      SAT-DU — Modelo analítico, priorización de riesgo y seguimiento del proyecto con datos sintéticos.
     </div>
   </footer>
 
@@ -263,13 +352,30 @@
 let currentData = [];
 let chartInstance = null;
 
-const projectPhases = [
-  { id: 1, name: 'Fase 1: Definición del problema, alcance y Project Charter', lead: 'Gerente de Proyecto', completed: true },
-  { id: 2, name: 'Fase 2: Adquisición, perfilado, limpieza y gobierno de datos (DAMA)', lead: 'Ingeniería / Gobierno de Datos', completed: true },
-  { id: 3, name: 'Fase 3: Análisis exploratorio, segmentación y reglas de riesgo', lead: 'Analista / Científico de Datos', completed: true },
-  { id: 4, name: 'Fase 4: Desarrollo y despliegue del tablero SAT-DU', lead: 'BI / Desarrollo', completed: true },
-  { id: 5, name: 'Fase 5: Validación institucional, protocolo de intervención y monitoreo', lead: 'Bienestar + Académica + PM', completed: false }
+const projectActivities = [
+  { id:'A', name:'Plan de proyecto y acta de constitución', duration:1, start:1, end:1, predecessor:'—', critical:true },
+  { id:'B', name:'Ingesta de datos académicos y financieros', duration:2, start:2, end:3, predecessor:'A', critical:true },
+  { id:'C', name:'Limpieza y tratamiento de datos faltantes', duration:2, start:4, end:5, predecessor:'B', critical:true },
+  { id:'D', name:'Integración de variables socioeconómicas', duration:1, start:4, end:4, predecessor:'B', critical:false },
+  { id:'E', name:'Ingeniería de variables', duration:1, start:6, end:6, predecessor:'C, D', critical:true },
+  { id:'F', name:'Entrenamiento y validación del modelo', duration:3, start:7, end:9, predecessor:'E', critical:true },
+  { id:'G', name:'Evaluación con Bienestar y coordinadores', duration:1, start:10, end:10, predecessor:'F', critical:true },
+  { id:'H', name:'Desarrollo del servicio API', duration:2, start:11, end:12, predecessor:'G', critical:true },
+  { id:'I', name:'Desarrollo del tablero de alertas', duration:2, start:11, end:12, predecessor:'G', critical:true },
+  { id:'J', name:'Pruebas de integración', duration:1, start:13, end:13, predecessor:'H, I', critical:true },
+  { id:'K', name:'Capacitación a usuarios', duration:1, start:14, end:14, predecessor:'J', critical:true },
+  { id:'L', name:'Piloto y cierre', duration:2, start:15, end:16, predecessor:'K', critical:true }
 ];
+
+const projectMilestones = [
+  { id:'H1', week:1, text:'Formalización de la gobernanza y aprobación del acta.', required:['A'] },
+  { id:'H2', week:6, text:'Datos limpios, integrados y listos para modelado.', required:['B','C','D','E'] },
+  { id:'H3', week:10, text:'Modelo entrenado y validado por la contraparte funcional.', required:['F','G'] },
+  { id:'H4', week:13, text:'API + tablero funcionales y pruebas de integración completadas.', required:['H','I','J'] },
+  { id:'H5', week:16, text:'Capacitación, piloto y cierre del proyecto.', required:['K','L'] }
+];
+
+let projectCompleted = JSON.parse(localStorage.getItem('satdu_project_completed') || '{}');
 
 const requiredColumns = [
   'id_estudiante','semestre','edad','sexo','departamento_origen','zona_origen','estrato',
@@ -397,7 +503,57 @@ function setData(rows, sourceName) {
 
   populateFilters();
   calculateDataQuality();
+  updateModelMetricsGlobal();
   applyAnalytics();
+}
+
+
+function isDropout(value) {
+  const s = String(value ?? '').trim().toLowerCase();
+  return s === 'sí' || s === 'si' || s === '1' || s === 'true';
+}
+
+function computeAUC(rows) {
+  const pts = rows
+    .map(r => ({ score: num(r.probabilidad_latente_desercion, NaN), y: isDropout(r.deserta_siguiente_periodo) ? 1 : 0 }))
+    .filter(p => Number.isFinite(p.score));
+
+  const nPos = pts.filter(p => p.y === 1).length;
+  const nNeg = pts.length - nPos;
+  if (!nPos || !nNeg) return NaN;
+
+  pts.sort((a,b) => a.score - b.score);
+  let rank = 1, posRankSum = 0, i = 0;
+
+  while (i < pts.length) {
+    let j = i + 1;
+    while (j < pts.length && pts[j].score === pts[i].score) j++;
+    const avgRank = (rank + (rank + (j - i) - 1)) / 2;
+    for (let k = i; k < j; k++) if (pts[k].y === 1) posRankSum += avgRank;
+    rank += (j - i);
+    i = j;
+  }
+
+  return (posRankSum - nPos * (nPos + 1) / 2) / (nPos * nNeg);
+}
+
+function updateModelMetricsGlobal() {
+  if (!currentData.length) return;
+
+  const auc = computeAUC(currentData);
+  const sorted = [...currentData].sort((a,b) =>
+    num(b.probabilidad_latente_desercion) - num(a.probabilidad_latente_desercion)
+  );
+  const topN = Math.ceil(sorted.length * 0.20);
+  const totalDropouts = sorted.filter(r => isDropout(r.deserta_siguiente_periodo)).length;
+  const captured = sorted.slice(0, topN).filter(r => isDropout(r.deserta_siguiente_periodo)).length;
+  const capture = totalDropouts ? captured / totalDropouts : 0;
+  const lift = capture / 0.20;
+
+  document.getElementById('modelAuc').textContent = Number.isFinite(auc) ? auc.toFixed(3) : '—';
+  document.getElementById('modelCapture20').textContent = `${(capture * 100).toFixed(1)}%`;
+  document.getElementById('modelLift20').textContent = `${lift.toFixed(2)}x`;
+  document.getElementById('modelCapturedCount').textContent = `${captured}/${totalDropouts}`;
 }
 
 function populateFilters() {
@@ -597,38 +753,128 @@ function calculateDataQuality() {
   document.getElementById('dataQuality').textContent = `${quality.toFixed(1)}%`;
 }
 
-function renderTasks() {
-  const container = document.getElementById('projectTasksContainer');
-  let completedCount = projectPhases.filter(t => t.completed).length;
-
-  container.innerHTML = projectPhases.map((task, index) => `
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border rounded-xl transition
-      ${task.completed ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white border-slate-200'}">
-      <div class="flex items-start gap-3">
-        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})"
-          class="h-4 w-4 mt-0.5 text-indigo-600 rounded cursor-pointer" />
-        <div>
-          <span class="text-sm font-semibold ${task.completed ? 'line-through text-slate-400' : 'text-slate-700'}">
-            ${escapeHtml(task.name)}
-          </span>
-          <span class="block text-xs text-slate-400 mt-0.5">Responsable: ${escapeHtml(task.lead)}</span>
-        </div>
-      </div>
-      <span class="text-xs px-2.5 py-1 rounded-full font-medium self-start sm:self-auto
-        ${task.completed ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}">
-        ${task.completed ? 'Completado' : 'En curso / pendiente'}
-      </span>
-    </div>`).join('');
-
-  const pctDone = Math.round(completedCount / projectPhases.length * 100);
-  document.getElementById('projectProgressPct').textContent = `${pctDone}%`;
-  document.getElementById('completedMilestones').textContent = `${completedCount}/${projectPhases.length}`;
-  document.getElementById('projectRisk').textContent =
-    pctDone === 100 ? 'Cerrado' : pctDone >= 60 ? 'Controlado' : 'Atención';
+function saveProjectProgress() {
+  localStorage.setItem('satdu_project_completed', JSON.stringify(projectCompleted));
 }
 
-function toggleTask(index) {
-  projectPhases[index].completed = !projectPhases[index].completed;
+function isActivityCompleted(id) {
+  return projectCompleted[id] === true;
+}
+
+function renderGantt() {
+  const container = document.getElementById('ganttContainer');
+  if (!container) return;
+
+  container.innerHTML = projectActivities.map(a => {
+    const completed = isActivityCompleted(a.id);
+    const label = `
+      <div class="p-2.5 border-r border-t flex items-center gap-2 bg-white">
+        <span class="inline-flex w-6 h-6 items-center justify-center rounded-md text-[10px] font-bold
+          ${a.critical ? 'bg-red-50 text-red-700' : 'bg-indigo-50 text-indigo-700'}">${a.id}</span>
+        <div class="min-w-0">
+          <div class="text-xs font-semibold text-slate-700 truncate">${escapeHtml(a.name)}</div>
+          <div class="text-[10px] text-slate-400">${a.duration} sem. · Pred: ${escapeHtml(a.predecessor)}</div>
+        </div>
+      </div>`;
+
+    const cells = Array.from({length:16}, (_, idx) => {
+      const week = idx + 1;
+      const active = week >= a.start && week <= a.end;
+      let cls = 'bg-white';
+      if (active && completed) cls = 'bg-emerald-200 border-emerald-300';
+      else if (active && a.critical) cls = 'bg-red-200 border-red-300';
+      else if (active) cls = 'bg-indigo-200 border-indigo-300';
+
+      return `<div class="border-t border-r min-h-[48px] ${cls} flex items-center justify-center">
+        ${active ? `<span class="text-[9px] font-semibold text-slate-700">${a.id}</span>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="grid" style="grid-template-columns: 330px repeat(16, minmax(48px,1fr));">${label}${cells}</div>`;
+  }).join('');
+}
+
+function renderMilestones() {
+  const container = document.getElementById('milestonesContainer');
+  if (!container) return;
+
+  container.innerHTML = projectMilestones.map(m => {
+    const completed = m.required.every(isActivityCompleted);
+    return `<div class="flex gap-3 p-3 rounded-lg border ${completed ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}">
+      <div class="shrink-0 w-10 h-10 rounded-lg flex flex-col items-center justify-center
+        ${completed ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-500 border'}">
+        <span class="text-[9px] font-bold">${m.id}</span>
+        <span class="text-[10px]">S${m.week}</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold ${completed ? 'text-emerald-800' : 'text-slate-700'}">${escapeHtml(m.text)}</p>
+        <p class="text-[10px] mt-1 ${completed ? 'text-emerald-600' : 'text-slate-400'}">${completed ? 'Alcanzado' : 'Pendiente'}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTasks() {
+  const container = document.getElementById('projectTasksContainer');
+  if (!container) return;
+
+  const completedCount = projectActivities.filter(a => isActivityCompleted(a.id)).length;
+
+  container.innerHTML = projectActivities.map((task) => {
+    const completed = isActivityCompleted(task.id);
+    return `
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-xl transition
+        ${completed ? 'bg-emerald-50/50 border-emerald-200' : 'bg-white border-slate-200'}">
+        <div class="flex items-start gap-3">
+          <input type="checkbox" ${completed ? 'checked' : ''} onchange="toggleTask('${task.id}')"
+            class="h-4 w-4 mt-1 text-indigo-600 rounded cursor-pointer" />
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded ${task.critical ? 'bg-red-50 text-red-700' : 'bg-indigo-50 text-indigo-700'}">${task.id}</span>
+              <span class="text-sm font-semibold ${completed ? 'line-through text-slate-400' : 'text-slate-700'}">
+                ${escapeHtml(task.name)}
+              </span>
+              ${task.critical ? '<span class="text-[9px] uppercase font-semibold text-red-500">Crítica</span>' : ''}
+            </div>
+            <span class="block text-[11px] text-slate-400 mt-1">
+              Semanas ${task.start}${task.end !== task.start ? `–${task.end}` : ''} · Duración ${task.duration} sem. · Predecesora: ${escapeHtml(task.predecessor)}
+            </span>
+          </div>
+        </div>
+        <span class="text-[10px] px-2.5 py-1 rounded-full font-semibold self-start sm:self-auto
+          ${completed ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
+          ${completed ? 'Completada' : 'Pendiente'}
+        </span>
+      </div>`;
+  }).join('');
+
+  const pctDone = Math.round(completedCount / projectActivities.length * 100);
+  const milestonesDone = projectMilestones.filter(m => m.required.every(isActivityCompleted)).length;
+
+  document.getElementById('projectProgressPct').textContent = `${pctDone}%`;
+  document.getElementById('completedMilestones').textContent = `${milestonesDone}/5`;
+
+  let state = 'Sin iniciar';
+  if (pctDone === 100) state = 'Cerrado';
+  else if (pctDone >= 75) state = 'Fase final';
+  else if (pctDone >= 40) state = 'En ejecución';
+  else if (pctDone > 0) state = 'En inicio';
+  document.getElementById('projectRisk').textContent = state;
+
+  renderGantt();
+  renderMilestones();
+}
+
+function toggleTask(id) {
+  projectCompleted[id] = !isActivityCompleted(id);
+  saveProjectProgress();
+  renderTasks();
+}
+
+function resetProjectProgress() {
+  if (!confirm('¿Desea reiniciar el seguimiento de todas las actividades?')) return;
+  projectCompleted = {};
+  saveProjectProgress();
   renderTasks();
 }
 
